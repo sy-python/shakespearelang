@@ -236,6 +236,9 @@ class Goto(SentenceOperation):
         new_position = play.scene_indices[act][self.destination]
         interpreter.current_position = new_position
 
+    def _run_logic(self, state, settings):
+        pass
+
 
 _OPERATIONS_CONSTRUCTORS = {
     "entrance": Entrance,
