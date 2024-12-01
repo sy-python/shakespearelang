@@ -1,11 +1,13 @@
 #! /usr/bin/env python
 
-import click
-import sys
-from .shakespeare import Shakespeare
-from .errors import ShakespeareError
-from ._repl import start_console, debug_play
 from functools import wraps, partial
+import sys
+
+import click
+
+from .errors import ShakespeareError
+from .shakespeare import Shakespeare
+from ._repl import start_console, debug_play
 
 
 def pretty_print_shakespeare_errors(func):

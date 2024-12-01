@@ -1,7 +1,8 @@
-from ._utils import normalize_name
-from ._expression import expression_from_ast
-from .errors import ShakespeareRuntimeError, ShakespeareParseError
 from tatsu.ast import AST
+
+from ._expression import expression_from_ast
+from ._utils import normalize_name
+from .errors import ShakespeareRuntimeError, ShakespeareParseError
 
 
 class Operation:

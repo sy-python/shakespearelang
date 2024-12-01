@@ -1,7 +1,8 @@
-from .shakespeare import Shakespeare
-from .errors import ShakespeareError
-from ._utils import normalize_name
 from tatsu.exceptions import FailedParse
+
+from ._utils import normalize_name
+from .errors import ShakespeareError
+from .shakespeare import Shakespeare
 
 try:
     import readline

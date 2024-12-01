@@ -1,7 +1,6 @@
 from collections import deque
 import sys
 
-
 from .errors import ShakespeareRuntimeError
 
 

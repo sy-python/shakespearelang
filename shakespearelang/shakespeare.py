@@ -4,19 +4,21 @@
 Shakespeare -- An interpreter for the Shakespeare Programming Language
 """
 
-from ._parser import shakespeareParser
-from tatsu.exceptions import FailedParse
-from .errors import ShakespeareRuntimeError, ShakespeareParseError
-from ._utils import parseinfo_context, normalize_name
-from ._state import State
-from ._preprocess import Play
-from .settings import Settings
-from ._operation import operations_from_event, operation_from_sentence, Goto, Breakpoint
-from ._expression import expression_from_ast
-import math
-from tatsu.ast import AST
 from functools import wraps
+import math
 from typing import Callable, Literal, Union
+
+from tatsu.ast import AST
+from tatsu.exceptions import FailedParse
+
+from ._expression import expression_from_ast
+from ._operation import operations_from_event, operation_from_sentence, Goto, Breakpoint
+from ._parser import shakespeareParser
+from ._preprocess import Play
+from ._state import State
+from ._utils import parseinfo_context, normalize_name
+from .errors import ShakespeareRuntimeError, ShakespeareParseError
+from .settings import Settings
 
 
 class Shakespeare:

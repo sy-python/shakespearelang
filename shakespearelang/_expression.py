@@ -1,7 +1,9 @@
+import math
+
+from tatsu.ast import AST
+
 from ._utils import normalize_name
 from .errors import ShakespeareRuntimeError, ShakespeareParseError
-from tatsu.ast import AST
-import math
 
 
 class Expression:

@@ -1,6 +1,7 @@
+from tatsu.ast import AST
+
 from ._operation import operations_from_event
 from .errors import ShakespeareRuntimeError
-from tatsu.ast import AST
 
 
 class Play:
