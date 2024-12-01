@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from tatsu.ast import AST
 
 from ._expression import expression_from_ast
@@ -5,11 +6,12 @@ from ._utils import normalize_name
 from .errors import ShakespeareRuntimeError, ShakespeareParseError
 
 
-class Operation:
+class Operation(ABC):
     def __init__(self, ast_node: AST):
         self.ast_node = ast_node
         self._setup(ast_node)
 
+    @abstractmethod
     def _setup(self, ast_node):
         pass
 
@@ -21,6 +23,7 @@ class Operation:
                 exc.parseinfo = self.ast_node.parseinfo
             raise exc
 
+    @abstractmethod
     def _run_logic(self, state, settings):
         pass
 
@@ -64,7 +67,11 @@ class Exeunt(Operation):
 
 
 class Breakpoint(Operation):
-    pass
+    def _setup(self, ast_node: AST):
+        pass
+
+    def _run_logic(self, state, settings):
+        pass
 
 
 class SentenceOperation(Operation):
@@ -81,6 +88,7 @@ class SentenceOperation(Operation):
             self.condition_type_positive = None
         self._setup()
 
+    @abstractmethod
     def _setup(self):
         pass
 
@@ -195,6 +203,9 @@ class Push(SentenceOperation):
 
 
 class Pop(SentenceOperation):
+    def _setup(self):
+        pass
+
     def _run_logic(self, state, settings):
         popping_character = state.character_opposite(self.character)
         state.character_by_name(popping_character).pop()

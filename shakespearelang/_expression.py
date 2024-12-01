@@ -1,3 +1,4 @@
+import abc
 import math
 
 from tatsu.ast import AST
@@ -6,7 +7,7 @@ from ._utils import normalize_name
 from .errors import ShakespeareRuntimeError, ShakespeareParseError
 
 
-class Expression:
+class Expression(abc.ABC):
     def __init__(self, ast_node: AST, character: str):
         self.ast_node = ast_node
         self.character = normalize_name(character)
@@ -14,6 +15,7 @@ class Expression:
         self.cached_value = None
         self._setup()
 
+    @abc.abstractmethod
     def _setup(self):
         pass
 
@@ -38,13 +40,23 @@ class Expression:
 
         return result
 
+    @abc.abstractmethod
+    def _evaluate_logic(self, state):
+        pass
+
 
 class FirstPersonValue(Expression):
+    def _setup(self):
+        pass
+
     def _evaluate_logic(self, state):
         return state.character_by_name(self.character).value
 
 
 class SecondPersonValue(Expression):
+    def _setup(self):
+        pass
+
     def _evaluate_logic(self, state):
         character_opposite = state.character_opposite(self.character)
         return state.character_by_name(character_opposite).value
@@ -61,19 +73,25 @@ class CharacterName(Expression):
 class NegativeNounPhrase(Expression):
     def _setup(self):
         self.cacheable = True
-        self.cached_value = -pow(2, len(self.ast_node.adjectives))
+
+    def _evaluate_logic(self, state):
+        return -pow(2, len(self.ast_node.adjectives))
 
 
 class PositiveNounPhrase(Expression):
     def _setup(self):
         self.cacheable = True
-        self.cached_value = pow(2, len(self.ast_node.adjectives))
+
+    def _evaluate_logic(self, state):
+        return pow(2, len(self.ast_node.adjectives))
 
 
 class Nothing(Expression):
     def _setup(self):
         self.cacheable = True
-        self.cached_value = 0
+
+    def _evaluate_logic(self, state):
+        return 0
 
 
 def _evaluate_factorial(operand):
@@ -113,20 +131,23 @@ class UnaryOperation(Expression):
         return self.operation(self.operand.evaluate(state))
 
 
-class BinaryOperation(Expression):
-    def _evaluate_quotient(first_operand, second_operand):
-        if second_operand == 0:
-            raise ShakespeareRuntimeError("Cannot divide by zero")
-        # Python's built-in integer division operator does not behave the
-        # same as C for negative numbers, using floor instead of truncated
-        # division
-        return int(first_operand / second_operand)
+def _evaluate_quotient(first_operand, second_operand):
+    if second_operand == 0:
+        raise ShakespeareRuntimeError("Cannot divide by zero")
+    # Python's built-in integer division operator does not behave the
+    # same as C for negative numbers, using floor instead of truncated
+    # division
+    return int(first_operand / second_operand)
 
-    def _evaluate_remainder(first_operand, second_operand):
-        if second_operand == 0:
-            raise ShakespeareRuntimeError("Cannot divide by zero")
-        # See note above. math.fmod replicates C behavior.
-        return int(math.fmod(first_operand, second_operand))
+
+def _evaluate_remainder(first_operand, second_operand):
+    if second_operand == 0:
+        raise ShakespeareRuntimeError("Cannot divide by zero")
+    # See note above. math.fmod replicates C behavior.
+    return int(math.fmod(first_operand, second_operand))
+
+
+class BinaryOperation(Expression):
 
     _BINARY_OPERATION_HANDLERS = {
         ("the", "difference", "between"): lambda a, b: a - b,
