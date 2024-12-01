@@ -1,27 +1,28 @@
-import abc
+from abc import ABC, abstractmethod
 import math
+from typing import Any, Callable
 
 from tatsu.ast import AST
 
+from ._state import State
 from ._utils import normalize_name
 from .errors import ShakespeareRuntimeError, ShakespeareParseError
 
 
-class Expression(abc.ABC):
-    def __init__(self, ast_node: AST, character: str):
-        self.ast_node = ast_node
-        self.character = normalize_name(character)
-        self.cacheable = False
-        self.cached_value = None
+class Expression(ABC):
+    def __init__(self, ast_node: AST, character: str) -> None:
+        self.ast_node: AST = ast_node
+        self.character: str = normalize_name(character)
+        self.cacheable: bool = False
+        self.cached_value: int | None = None
         self._setup()
 
-    @abc.abstractmethod
-    def _setup(self):
+    @abstractmethod
+    def _setup(self) -> None:
         pass
 
-    def evaluate(self, state):
+    def evaluate(self, state: State) -> int:
         state.assert_character_on_stage(self.character)
-
         try:
             return self._evaluate_logic_cached(state)
         except ShakespeareRuntimeError as exc:
@@ -29,92 +30,87 @@ class Expression(abc.ABC):
                 exc.parseinfo = self.ast_node.parseinfo
             raise exc
 
-    def _evaluate_logic_cached(self, state):
+    def _evaluate_logic_cached(self, state: State) -> int:
         if self.cacheable and self.cached_value is not None:
             return self.cached_value
-
         result = self._evaluate_logic(state)
-
         if self.cacheable:
             self.cached_value = result
-
         return result
 
-    @abc.abstractmethod
-    def _evaluate_logic(self, state):
+    @abstractmethod
+    def _evaluate_logic(self, state: State) -> int:
         pass
 
 
 class FirstPersonValue(Expression):
-    def _setup(self):
+    def _setup(self) -> None:
         pass
 
-    def _evaluate_logic(self, state):
+    def _evaluate_logic(self, state: State) -> int:
         return state.character_by_name(self.character).value
 
 
 class SecondPersonValue(Expression):
-    def _setup(self):
+    def _setup(self) -> None:
         pass
 
-    def _evaluate_logic(self, state):
+    def _evaluate_logic(self, state: State) -> int:
         character_opposite = state.character_opposite(self.character)
         return state.character_by_name(character_opposite).value
 
 
 class CharacterName(Expression):
-    def _setup(self):
-        self.name = normalize_name(self.ast_node.name)
+    def _setup(self) -> None:
+        self.name: str = normalize_name(self.ast_node.name)
 
-    def _evaluate_logic(self, state):
+    def _evaluate_logic(self, state: State) -> int:
         return state.character_by_name(self.name).value
 
 
 class NegativeNounPhrase(Expression):
-    def _setup(self):
+    def _setup(self) -> None:
         self.cacheable = True
 
-    def _evaluate_logic(self, state):
-        return -pow(2, len(self.ast_node.adjectives))
+    def _evaluate_logic(self, state: State) -> int:
+        return -pow(2, len(self.ast_node.adjectives))  # type: ignore
 
 
 class PositiveNounPhrase(Expression):
-    def _setup(self):
+    def _setup(self) -> None:
         self.cacheable = True
 
-    def _evaluate_logic(self, state):
-        return pow(2, len(self.ast_node.adjectives))
+    def _evaluate_logic(self, state: State) -> int:
+        return pow(2, len(self.ast_node.adjectives))  # type: ignore
 
 
 class Nothing(Expression):
-    def _setup(self):
+    def _setup(self) -> None:
         self.cacheable = True
 
-    def _evaluate_logic(self, state):
+    def _evaluate_logic(self, state: State) -> int:
         return 0
 
 
-def _evaluate_factorial(operand):
+def _evaluate_factorial(operand: int) -> int:
     if operand < 0:
         raise ShakespeareRuntimeError(
-            "Cannot take the factorial of a negative number: " + str(operand)
+            f"Cannot take the factorial of a negative number: {operand}"
         )
     return math.factorial(operand)
 
 
-def _evaluate_square_root(operand):
+def _evaluate_square_root(operand: int) -> int:
     if operand < 0:
         raise ShakespeareRuntimeError(
-            "Cannot take the square root of a negative number: " + str(operand)
+            f"Cannot take the square root of a negative number: {operand}"
         )
-    # Truncates (does not round) result -- this is equivalent to C
-    # implementation's cast.
+
     return int(math.sqrt(operand))
 
 
 class UnaryOperation(Expression):
-
-    _UNARY_OPERATION_HANDLERS = {
+    _UNARY_OPERATION_HANDLERS: dict[Any, Callable[[int], int]] = {
         ("the", "cube", "of"): lambda x: pow(x, 3),
         ("the", "factorial", "of"): _evaluate_factorial,
         ("the", "square", "of"): lambda x: pow(x, 2),
@@ -122,34 +118,29 @@ class UnaryOperation(Expression):
         "twice": lambda x: x * 2,
     }
 
-    def _setup(self):
-        self.operand = expression_from_ast(self.ast_node.value, self.character)
-        self.cacheable = self.operand.cacheable
-        self.operation = self._UNARY_OPERATION_HANDLERS[self.ast_node.operation]
+    def _setup(self) -> None:
+        self.operand: Expression = expression_from_ast(self.ast_node.value, self.character)  # type: ignore
+        self.cacheable: bool = self.operand.cacheable
+        self.operation = self._UNARY_OPERATION_HANDLERS[self.ast_node.operation]  # type: ignore
 
-    def _evaluate_logic(self, state):
+    def _evaluate_logic(self, state: State) -> int:
         return self.operation(self.operand.evaluate(state))
 
 
-def _evaluate_quotient(first_operand, second_operand):
+def _evaluate_quotient(first_operand: int, second_operand: int) -> int:
     if second_operand == 0:
         raise ShakespeareRuntimeError("Cannot divide by zero")
-    # Python's built-in integer division operator does not behave the
-    # same as C for negative numbers, using floor instead of truncated
-    # division
     return int(first_operand / second_operand)
 
 
-def _evaluate_remainder(first_operand, second_operand):
+def _evaluate_remainder(first_operand: int, second_operand: int) -> int:
     if second_operand == 0:
         raise ShakespeareRuntimeError("Cannot divide by zero")
-    # See note above. math.fmod replicates C behavior.
     return int(math.fmod(first_operand, second_operand))
 
 
 class BinaryOperation(Expression):
-
-    _BINARY_OPERATION_HANDLERS = {
+    _BINARY_OPERATION_HANDLERS: dict[Any, Callable[[int, int], int]] = {
         ("the", "difference", "between"): lambda a, b: a - b,
         ("the", "product", "of"): lambda a, b: a * b,
         ("the", "quotient", "between"): _evaluate_quotient,
@@ -157,23 +148,25 @@ class BinaryOperation(Expression):
         ("the", "sum", "of"): lambda a, b: a + b,
     }
 
-    def _setup(self):
-        self.first_operand = expression_from_ast(
-            self.ast_node.first_value, self.character
+    def _setup(self) -> None:
+        self.first_operand: Expression = expression_from_ast(
+            self.ast_node.first_value, self.character  # type: ignore
         )
-        self.second_operand = expression_from_ast(
-            self.ast_node.second_value, self.character
+        self.second_operand: Expression = expression_from_ast(
+            self.ast_node.second_value, self.character  # type: ignore
         )
-        self.cacheable = self.first_operand.cacheable and self.second_operand.cacheable
-        self.operation = self._BINARY_OPERATION_HANDLERS[self.ast_node.operation]
+        self.cacheable: bool = (
+            self.first_operand.cacheable and self.second_operand.cacheable
+        )
+        self.operation = self._BINARY_OPERATION_HANDLERS[self.ast_node.operation]  # type: ignore
 
-    def _evaluate_logic(self, state):
+    def _evaluate_logic(self, state: State) -> int:
         return self.operation(
             self.first_operand.evaluate(state), self.second_operand.evaluate(state)
         )
 
 
-_EXPRESSION_CONSTRUCTORS = {
+_EXPRESSION_CONSTRUCTORS: dict[str, type[Expression]] = {
     "first_person_value": FirstPersonValue,
     "second_person_value": SecondPersonValue,
     "character_name": CharacterName,
@@ -185,5 +178,5 @@ _EXPRESSION_CONSTRUCTORS = {
 }
 
 
-def expression_from_ast(ast_node: AST, character: str):
-    return _EXPRESSION_CONSTRUCTORS[ast_node.parseinfo.rule](ast_node, character)
+def expression_from_ast(ast_node: AST, character: str) -> Expression:
+    return _EXPRESSION_CONSTRUCTORS[ast_node.parseinfo.rule](ast_node, character)  # type: ignore

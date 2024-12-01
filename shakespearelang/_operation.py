@@ -30,7 +30,7 @@ class Operation(ABC):
 
 class Entrance(Operation):
     def _setup(self, ast_node: AST):
-        self.characters = [normalize_name(c) for c in ast_node.characters]
+        self.characters = [normalize_name(c) for c in ast_node.characters]  # type: ignore
 
     def _run_logic(self, state, settings):
         if settings.output_style in ["verbose", "debug"]:
@@ -82,7 +82,7 @@ class SentenceOperation(Operation):
         self.has_condition = ast_node.condition is not None
         if self.has_condition:
             self.condition_type_positive = (
-                ast_node.condition.parseinfo.rule == "positive_if"
+                ast_node.condition.parseinfo.rule == "positive_if"  # type: ignore
             )
         else:
             self.condition_type_positive = None
@@ -118,12 +118,12 @@ class Question(SentenceOperation):
 
     def _setup(self):
         self.first_value = expression_from_ast(
-            self.op_ast_node.first_value, self.character
+            self.op_ast_node.first_value, self.character  # type: ignore
         )
         self.second_value = expression_from_ast(
-            self.op_ast_node.second_value, self.character
+            self.op_ast_node.second_value, self.character  # type: ignore
         )
-        comparative_rule = self.op_ast_node.comparative.parseinfo.rule
+        comparative_rule = self.op_ast_node.comparative.parseinfo.rule  # type: ignore
         if comparative_rule not in self._COMPARATIVE_TYPE_HANDLERS:
             raise ShakespeareRuntimeError(
                 f"Unknown comparative type: {comparative_rule}"
@@ -146,7 +146,7 @@ class Question(SentenceOperation):
 
 class Assignment(SentenceOperation):
     def _setup(self):
-        self.value = expression_from_ast(self.op_ast_node.value, self.character)
+        self.value = expression_from_ast(self.op_ast_node.value, self.character)  # type: ignore
 
     def _run_logic(self, state, settings):
         character_opposite = state.character_opposite(self.character)
@@ -159,7 +159,7 @@ class Assignment(SentenceOperation):
 
 class Input(SentenceOperation):
     def _setup(self):
-        self.input_type = "number" if self.op_ast_node.input_number else "char"
+        self.input_type = "number" if self.op_ast_node.input_number else "char"  # type: ignore
 
     def _run_logic(self, state, settings):
         character_to_set = state.character_opposite(self.character)
@@ -176,7 +176,7 @@ class Input(SentenceOperation):
 
 class Output(SentenceOperation):
     def _setup(self):
-        self.output_type = "number" if self.op_ast_node.output_number else "char"
+        self.output_type = "number" if self.op_ast_node.output_number else "char"  # type: ignore
 
     def _run_logic(self, state, settings):
         character_to_output = state.character_opposite(self.character)
@@ -191,7 +191,7 @@ class Output(SentenceOperation):
 
 class Push(SentenceOperation):
     def _setup(self):
-        self.value = expression_from_ast(self.op_ast_node.value, self.character)
+        self.value = expression_from_ast(self.op_ast_node.value, self.character)  # type: ignore
 
     def _run_logic(self, state, settings):
         pushing_character = state.character_opposite(self.character)
@@ -216,7 +216,7 @@ class Pop(SentenceOperation):
 
 class Goto(SentenceOperation):
     def _setup(self):
-        self.destination = self.op_ast_node.destination.value
+        self.destination = self.op_ast_node.destination.value  # type: ignore
 
     def run(self, state, interpreter, play, settings):
         state.assert_character_on_stage(self.character)
@@ -253,13 +253,13 @@ _OPERATIONS_CONSTRUCTORS = {
 
 
 def operations_from_event(event: AST):
-    rule = event.parseinfo.rule
+    rule = event.parseinfo.rule  # type: ignore
     if rule == "line":
-        return [operation_from_sentence(s, event.character) for s in event.contents]
+        return [operation_from_sentence(s, event.character) for s in event.contents]  # type: ignore
     else:
         return [_OPERATIONS_CONSTRUCTORS[rule](event)]
 
 
 def operation_from_sentence(sentence: AST, character: str):
-    sentence_operation_rule = sentence.operation.parseinfo.rule
+    sentence_operation_rule = sentence.operation.parseinfo.rule  # type: ignore
     return _OPERATIONS_CONSTRUCTORS[sentence_operation_rule](sentence, character)
