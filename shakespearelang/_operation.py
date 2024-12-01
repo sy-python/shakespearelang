@@ -216,6 +216,7 @@ class Pop(SentenceOperation):
 
 class Goto(SentenceOperation):
     def _setup(self):
+        self.target = self.op_ast_node.target.title()  # type: ignore
         self.destination = self.op_ast_node.destination.value  # type: ignore
 
     def run(self, state, interpreter, play, settings):
@@ -224,16 +225,24 @@ class Goto(SentenceOperation):
         if self.has_condition and self.condition_type_positive != state.global_boolean:
             if settings.output_style in ["verbose", "debug"]:
                 print(
-                    f"Not jumping to Scene {self.destination} because global boolean is {state.global_boolean}"
+                    f"Not jumping to {self.target} {self.destination} because global boolean is {state.global_boolean}"
                 )
             return
 
         if settings.output_style in ["verbose", "debug"]:
-            print(f"Jumping to Scene {self.destination}")
-        act = play.get_act(interpreter.current_position)
-        if self.destination not in play.scene_indices[act]:
-            raise ShakespeareRuntimeError(f"Scene {self.destination} does not exist.")
-        new_position = play.scene_indices[act][self.destination]
+            print(f"Jumping to {self.target} {self.destination}")
+
+        if self.target == "Act":
+            if self.destination not in play.act_indices:
+                raise ShakespeareRuntimeError(f"Act {self.destination} does not exist.")
+            new_position = play.act_indices[self.destination]
+        else:
+            act = play.get_act(interpreter.current_position)
+            if self.destination not in play.scene_indices[act]:
+                raise ShakespeareRuntimeError(
+                    f"Scene {self.destination} does not exist."
+                )
+            new_position = play.scene_indices[act][self.destination]
         interpreter.current_position = new_position
 
     def _run_logic(self, state, settings):

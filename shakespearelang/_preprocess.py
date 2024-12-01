@@ -7,8 +7,8 @@ from .errors import ShakespeareRuntimeError
 class Play:
     def __init__(self, ast: AST):
         self.operations = []
-        self.act_indices = []
-        self.scene_indices = {}
+        self.act_indices: dict[int, int] = {}
+        self.scene_indices: dict[int, dict[int, int]] = {}
         self._preprocess(ast)
 
     def _preprocess(self, ast: AST):
@@ -19,7 +19,7 @@ class Play:
                     f"Act numeral {act_number} is not unique",
                     parseinfo=act.number.parseinfo,
                 )
-            self.act_indices.append((act_number, len(self.operations)))
+            self.act_indices[act_number] = len(self.operations)
             self.scene_indices[act_number] = {}
             for scene in act.scenes:
                 scene_number = scene.number.value
@@ -32,8 +32,15 @@ class Play:
                 for event in scene.events:
                     self.operations += operations_from_event(event)
 
-    def get_act(self, position: int):
-        i = 0
-        while i + 1 < len(self.act_indices) and self.act_indices[i + 1][1] <= position:
-            i = i + 1
-        return self.act_indices[i][0]
+    def get_act(self, position: int) -> int:
+        last_act = None
+        for act, pos in self.act_indices.items():
+            if last_act is None:
+                last_act = act
+                continue
+            if pos > position:
+                return last_act
+            last_act = act
+
+        else:
+            return list(self.act_indices.keys())[-1]
