@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "shakespearelang-sy"
+name = "shakespearelang"
 version = "1.0.0"
 description = "An interpreter for the Shakespeare Programming Language."
 authors = ["Zeb Burke-Conte <zebburkeconte@gmail.com>", "Sy <shakespeare@sy-py.top>"]
