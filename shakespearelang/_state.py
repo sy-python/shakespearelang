@@ -6,9 +6,9 @@ from ._utils import normalize_name
 class State:
     """State of a Shakespeare play execution context: variable values and who is on stage."""
 
-    def __init__(self, personae):
-        self.global_boolean = False
-        self.characters = {}
+    def __init__(self, personae) -> None:
+        self.global_boolean: bool = False
+        self.characters: dict[str, Character] = {}
         for persona in personae:
             name = normalize_name(persona.character)
             if name in self.characters:
@@ -16,10 +16,10 @@ class State:
                     f"{name} already initialized", parseinfo=persona.parseinfo
                 )
             self.characters[name] = Character()
-        self._characters_on_stage = {}
-        self._characters_opposite = {}
+        self._characters_on_stage: dict[str, Character] = {}
+        self._characters_opposite: dict[str, str] = {}
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\n".join(
             [f"global boolean = {self.global_boolean}", "on stage:"]
             + [f"  {n} = {c}" for n, c in self._characters_on_stage.items()]
@@ -31,37 +31,37 @@ class State:
             ]
         )
 
-    def enter_characters(self, characters):
+    def enter_characters(self, characters: list[str]) -> None:
         for character_name in characters:
             self.assert_character_off_stage(character_name)
         for character_name in characters:
             self._enter_character(character_name)
 
-    def exeunt_characters(self, characters):
+    def exeunt_characters(self, characters: list[str]) -> None:
         for character_name in characters:
             self.assert_character_on_stage(character_name)
         for character_name in characters:
             self._exit_character(character_name)
 
-    def exeunt_all(self):
+    def exeunt_all(self) -> None:
         for character_name in list(self._characters_on_stage.keys()):
             self._exit_character(character_name)
 
-    def exit_character(self, character_name):
+    def exit_character(self, character_name: str) -> None:
         self.assert_character_on_stage(character_name)
         self._exit_character(character_name)
 
-    def _enter_character(self, character_name):
+    def _enter_character(self, character_name: str) -> None:
         character = self.characters[character_name]
         self._characters_on_stage[character_name] = character
         self._update_opposites()
 
-    def _exit_character(self, character_name):
+    def _exit_character(self, character_name: str) -> None:
         character = self.characters[character_name]
         del self._characters_on_stage[character_name]
         self._update_opposites()
 
-    def _update_opposites(self):
+    def _update_opposites(self) -> None:
         if len(self._characters_on_stage) != 2:
             self._characters_opposite = {}
         else:
@@ -69,7 +69,7 @@ class State:
             self._characters_opposite[names[0]] = names[1]
             self._characters_opposite[names[1]] = names[0]
 
-    def character_opposite(self, character_name):
+    def character_opposite(self, character_name: str) -> str:
         if character_name in self._characters_opposite:
             return self._characters_opposite[character_name]
 
@@ -80,20 +80,20 @@ class State:
         else:
             raise ShakespeareRuntimeError(f"{character_name} is talking to nobody!")
 
-    def character_by_name(self, name):
+    def character_by_name(self, name: str) -> Character:
         if name in self.characters:
             return self.characters[name]
         else:
             raise ShakespeareRuntimeError(f"{name} was not initialized!")
 
-    def assert_character_on_stage(self, character_name):
+    def assert_character_on_stage(self, character_name: str) -> None:
         if character_name not in self._characters_on_stage:
             if character_name not in self.characters:
                 raise ShakespeareRuntimeError(f"{character_name} was not initialized!")
             else:
                 raise ShakespeareRuntimeError(f"{character_name} is not on stage!")
 
-    def assert_character_off_stage(self, character_name):
+    def assert_character_off_stage(self, character_name: str) -> None:
         if character_name in self._characters_on_stage:
             raise ShakespeareRuntimeError(f"{character_name} is already on stage!")
         if character_name not in self.characters:
