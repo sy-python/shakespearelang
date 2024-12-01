@@ -103,10 +103,11 @@ class ReaderInputManager:
             self._buffer.appendleft(char)
             return 0
 
-        while self._get_character().isdigit():
-            number.append(self._get_character())
+        while (char := self._get_character()).isdigit():
+            number.append(char)
 
-        self._buffer.appendleft(char)
+        if char != "\n":
+            self._buffer.appendleft(char)
 
         return int(sign + "".join(number))
 
