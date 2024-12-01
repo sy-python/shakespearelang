@@ -76,22 +76,25 @@ class Nothing(Expression):
         self.cached_value = 0
 
 
-class UnaryOperation(Expression):
-    def _evaluate_factorial(operand):
-        if operand < 0:
-            raise ShakespeareRuntimeError(
-                "Cannot take the factorial of a negative number: " + str(operand)
-            )
-        return math.factorial(operand)
+def _evaluate_factorial(operand):
+    if operand < 0:
+        raise ShakespeareRuntimeError(
+            "Cannot take the factorial of a negative number: " + str(operand)
+        )
+    return math.factorial(operand)
 
-    def _evaluate_square_root(operand):
-        if operand < 0:
-            raise ShakespeareRuntimeError(
-                "Cannot take the square root of a negative number: " + str(operand)
-            )
-        # Truncates (does not round) result -- this is equivalent to C
-        # implementation's cast.
-        return int(math.sqrt(operand))
+
+def _evaluate_square_root(operand):
+    if operand < 0:
+        raise ShakespeareRuntimeError(
+            "Cannot take the square root of a negative number: " + str(operand)
+        )
+    # Truncates (does not round) result -- this is equivalent to C
+    # implementation's cast.
+    return int(math.sqrt(operand))
+
+
+class UnaryOperation(Expression):
 
     _UNARY_OPERATION_HANDLERS = {
         ("the", "cube", "of"): lambda x: pow(x, 3),
