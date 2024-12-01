@@ -25,9 +25,9 @@ class Settings:
     }
 
     def __init__(self, input_style: str, output_style: str, **kwargs):
+        self._kwargs = kwargs
         self.input_style = input_style
         self.output_style = output_style
-        self._kwargs = kwargs
 
     @property
     def input_style(self) -> str:
