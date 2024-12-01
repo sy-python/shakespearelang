@@ -90,6 +90,24 @@ def test_goto_prev(capsys):
     assert captured.err == ""
 
 
+def test_goto_acts(capsys):
+    s = Shakespeare(SAMPLE_PLAY)
+
+    assert s.current_position == 0
+    s.step_forward()
+    assert s.current_position == 1
+    s.run_sentence("Let us proceed to Act II.", "Juliet")
+    assert s.current_position == 4
+    s.step_forward()
+    assert s.current_position == 5
+    s.run_sentence("Let us return to Act I.", "Juliet")
+    assert s.current_position == 0
+
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert captured.err == ""
+
+
 def test_goto_without_opposite_character(capsys):
     s = Shakespeare(SAMPLE_PLAY)
 
