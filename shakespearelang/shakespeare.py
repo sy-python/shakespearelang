@@ -12,7 +12,13 @@ from tatsu.ast import AST
 from tatsu.exceptions import FailedParse
 
 from ._expression import expression_from_ast
-from ._operation import operations_from_event, operation_from_sentence, Goto, Breakpoint
+from ._operation import (
+    operations_from_event,
+    operation_from_sentence,
+    Goto,
+    Breakpoint,
+    Operation,
+)
 from ._parser import shakespeareParser
 from ._preprocess import Play
 from ._state import State
@@ -60,8 +66,9 @@ class Shakespeare:
     def __init__(
         self,
         play: Union[str, AST],
-        input_style: Literal["basic", "interactive"] = "basic",
+        input_style: Literal["basic", "interactive", "reader"] = "basic",
         output_style: Literal["basic", "verbose", "debug"] = "basic",
+        **kwargs,
     ):
         """
         Arguments:
@@ -82,7 +89,7 @@ class Shakespeare:
                 instance for this interpreter. To change after initialization,
                 modify that instance at the .settings property of the interpreter.
         """
-        self.settings = Settings(input_style, output_style)
+        self.settings = Settings(input_style, output_style, **kwargs)
         self.parser = shakespeareParser()
         ast = self._parse_if_necessary(play, "play")
         self.play = Play(ast)
@@ -202,7 +209,7 @@ class Shakespeare:
 
     # HELPERS
 
-    def _run_operation(self, operation):
+    def _run_operation(self, operation: Operation):
         if isinstance(operation, Goto):
             operation.run(self.state, self, self.play, self.settings)
         else:
