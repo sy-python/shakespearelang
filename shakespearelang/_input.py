@@ -1,5 +1,6 @@
 from collections import deque
 import sys
+from typing import TextIO
 
 from .errors import ShakespeareRuntimeError
 
@@ -83,3 +84,41 @@ class InteractiveInputManager:
             return ord("\n")
         else:
             return ord(value[0])
+
+
+class ReaderInputManager:
+    def __init__(self, reader: TextIO) -> None:
+        self._reader = reader
+        self._buffer: deque[str] = deque()
+
+    def consume_numeric_input(self) -> int:
+        char = self._get_character()
+        if char in ["+", "-"]:
+            sign = char
+            number = []
+        elif char.isdigit():
+            sign = ""
+            number = [char]
+        else:
+            self._buffer.appendleft(char)
+            return 0
+
+        while self._get_character().isdigit():
+            number.append(self._get_character())
+
+        self._buffer.appendleft(char)
+
+        return int(sign + "".join(number))
+
+    def consume_character_input(self) -> int:
+        value = self._get_character()
+        if value == "":
+            return -1
+        else:
+            return ord(value)
+
+    def _get_character(self) -> str:
+        if self._buffer:
+            return self._buffer.popleft()
+
+        return self._reader.read(1)
