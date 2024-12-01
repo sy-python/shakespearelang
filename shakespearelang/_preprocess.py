@@ -12,7 +12,7 @@ class Play:
         self._preprocess(ast)
 
     def _preprocess(self, ast: AST):
-        for act in ast.acts:
+        for act in ast.acts:  # type: ignore
             act_number = act.number.value
             if act_number in self.scene_indices:
                 raise ShakespeareRuntimeError(

@@ -21,6 +21,37 @@ from .errors import ShakespeareRuntimeError, ShakespeareParseError
 from .settings import Settings
 
 
+def _add_interpreter_context_to_errors(func):
+    @wraps(func)
+    def inner_function(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except ShakespeareRuntimeError as exc:
+            if not exc.interpreter:
+                exc.interpreter = self
+            raise exc
+
+    return inner_function
+
+
+def _parse_first_argument(rule_name):
+    def decorator(func):
+        @wraps(func)
+        def inner_function(self, first_arg, *args, **kwargs):
+            parsed = self._parse_if_necessary(first_arg, rule_name)
+
+            try:
+                return func(self, parsed, *args, **kwargs)
+            except ShakespeareRuntimeError as exc:
+                if not exc.parseinfo:
+                    exc.parseinfo = parsed.parseinfo
+                raise exc
+
+        return inner_function
+
+    return decorator
+
+
 class Shakespeare:
     """
     Interpreter for the Shakespeare Programming Language.
@@ -58,37 +89,6 @@ class Shakespeare:
         self.state = State(ast.dramatis_personae)
 
         self.current_position = 0
-
-    # DECORATORS
-
-    def _add_interpreter_context_to_errors(func):
-        @wraps(func)
-        def inner_function(self, *args, **kwargs):
-            try:
-                return func(self, *args, **kwargs)
-            except ShakespeareRuntimeError as exc:
-                if not exc.interpreter:
-                    exc.interpreter = self
-                raise exc
-
-        return inner_function
-
-    def _parse_first_argument(rule_name):
-        def decorator(func):
-            @wraps(func)
-            def inner_function(self, first_arg, *args, **kwargs):
-                parsed = self._parse_if_necessary(first_arg, rule_name)
-
-                try:
-                    return func(self, parsed, *args, **kwargs)
-                except ShakespeareRuntimeError as exc:
-                    if not exc.parseinfo:
-                        exc.parseinfo = parsed.parseinfo
-                    raise exc
-
-            return inner_function
-
-        return decorator
 
     # PUBLIC METHODS
 
@@ -191,8 +191,8 @@ class Shakespeare:
         Returns:
             The integer value of the expression.
         """
-        expression = expression_from_ast(expression, character)
-        return expression.evaluate(self.state)
+        expression_obj = expression_from_ast(expression, character)
+        return expression_obj.evaluate(self.state)
 
     def parse(self, item, rule_name):
         try:
