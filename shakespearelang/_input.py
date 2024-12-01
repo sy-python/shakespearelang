@@ -1,10 +1,13 @@
-from .errors import ShakespeareRuntimeError
+from collections import deque
 import sys
+
+
+from .errors import ShakespeareRuntimeError
 
 
 class BasicInputManager:
     def __init__(self):
-        self._input_buffer = ""
+        self._input_buffer = deque()
 
     def consume_numeric_input(self):
         try:
@@ -17,7 +20,7 @@ class BasicInputManager:
 
         if number is None:
             if sign:
-                self._input_buffer = sign + self._input_buffer
+                self._input_buffer.appendleft(sign)
             return 0
 
         self._consume_newline_if_present()
@@ -26,25 +29,24 @@ class BasicInputManager:
 
     def _consume_newline_if_present(self):
         if self._input_buffer and self._input_buffer[0] == "\n":
-            self._input_buffer = self._input_buffer[1:]
+            self._input_buffer.popleft()
 
     def _consume_sign_if_present(self):
         if self._input_buffer and (sign := self._input_buffer[0]) in ["+", "-"]:
-            self._input_buffer = self._input_buffer[1:]
+            self._input_buffer.popleft()
             return sign
 
         return ""
 
     def _consume_digits(self):
-        number_input = ""
+        number_input = []
         while self._input_buffer and self._input_buffer[0].isdigit():
-            number_input += self._input_buffer[0]
-            self._input_buffer = self._input_buffer[1:]
+            number_input.append(self._input_buffer.popleft())
 
         if len(number_input) == 0:
             return None
 
-        return int(number_input)
+        return int("".join(number_input))
 
     def consume_character_input(self):
         try:
@@ -52,8 +54,7 @@ class BasicInputManager:
         except EOFError:
             return -1
 
-        value = ord(self._input_buffer[0])
-        self._input_buffer = self._input_buffer[1:]
+        value = ord(self._input_buffer.popleft())
         return value
 
     def _ensure_input_buffer(self):
@@ -61,7 +62,7 @@ class BasicInputManager:
             # We want all output that has already happened to appear before we
             # ask the user for input
             sys.stdout.flush()
-            self._input_buffer = sys.stdin.readline()
+            self._input_buffer.extend(sys.stdin.readline())
             if not self._input_buffer:
                 raise EOFError()
 
