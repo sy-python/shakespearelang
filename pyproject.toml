@@ -2,7 +2,7 @@
 name = "shakespearelang-sy"
 version = "1.0.0"
 description = "An interpreter for the Shakespeare Programming Language."
-authors = ["Zeb Burke-Conte <zebburkeconte@gmail.com>", Sy <shakespeare@sy-py.top>]
+authors = ["Zeb Burke-Conte <zebburkeconte@gmail.com>", "Sy <shakespeare@sy-py.top>"]
 readme = "README.rst"
 repository = "https://github.com/sy-python/shakespearelang"
 homepage = "http://shakespearelang.com"
