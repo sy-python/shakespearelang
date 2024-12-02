@@ -164,9 +164,8 @@ def test_basic_input(tmp_path):
     cli.waitnoecho()
 
     expect_output_exactly(cli, "Enter Hamlet, Juliet\n")
-    cli.sendline("10")
+    cli.sendline("10H")
     expect_output_exactly(cli, "Setting Hamlet to input value 10\n")
-    cli.sendline("H")
     expect_output_exactly(cli, "Setting Hamlet to input value 72\n", eof=True)
 
 

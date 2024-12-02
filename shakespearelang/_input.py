@@ -23,13 +23,7 @@ class BasicInputManager:
                 self._input_buffer.appendleft(sign)
             return 0
 
-        self._consume_newline_if_present()
-
         return -number if sign == "-" else number
-
-    def _consume_newline_if_present(self) -> None:
-        if self._input_buffer and self._input_buffer[0] == "\n":
-            self._input_buffer.popleft()
 
     def _consume_sign_if_present(self) -> str:
         if self._input_buffer and (sign := self._input_buffer[0]) in ["+", "-"]:
@@ -106,8 +100,7 @@ class ReaderInputManager:
         while (char := self._get_character()).isdigit():
             number.append(char)
 
-        if char != "\n":
-            self._buffer.appendleft(char)
+        self._buffer.appendleft(char)
 
         return int(sign + "".join(number))
 

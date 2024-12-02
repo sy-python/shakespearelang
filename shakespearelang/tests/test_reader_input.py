@@ -30,7 +30,7 @@ def test_character_input(monkeypatch, capsys):
 
 
 def test_numeric_input(monkeypatch, capsys):
-    reader = StringIO("123\n-2\naaa")
+    reader = StringIO("123\n-2aaa")
     s = Shakespeare(
         "Foo. Juliet, a test. Romeo, a test.", input_style="reader", reader=reader
     )
@@ -38,6 +38,9 @@ def test_numeric_input(monkeypatch, capsys):
 
     s.run_sentence("Listen to your heart!", "Juliet")
     assert s.state.character_by_name("Romeo").value == 123
+
+    s.run_sentence("Open your mind!", "Juliet")
+    assert s.state.character_by_name("Romeo").value == 10
 
     s.run_sentence("Listen to your heart!", "Juliet")
     assert s.state.character_by_name("Romeo").value == -2

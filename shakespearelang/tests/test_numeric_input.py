@@ -39,22 +39,6 @@ def test_ignores_non_digits(monkeypatch, capsys):
     assert captured.err == ""
 
 
-def test_consumes_trailing_newline(monkeypatch, capsys):
-    monkeypatch.setattr("sys.stdin", StringIO("4257\na"))
-    s = Shakespeare("Foo. Juliet, a test. Romeo, a test.")
-    s.run_event("[Enter Romeo and Juliet]")
-    s.run_sentence("Listen to your heart!", "Juliet")
-    assert s.state.character_by_name("Romeo").value == 4257
-    assert input() == "a"
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert captured.err == ""
-
-    # Make sure there isn't a '\n' still living in the buffer
-    s.run_sentence("Open your mind!", "Juliet")
-    assert s.state.character_by_name("Romeo").value == -1
-
-
 def test_no_digits_consumed(monkeypatch, capsys):
     monkeypatch.setattr("sys.stdin", StringIO("a123"))
     s = Shakespeare("Foo. Juliet, a test. Romeo, a test.")
@@ -95,6 +79,8 @@ def test_conditional(monkeypatch, capsys):
     s.state.global_boolean = True
     s.run_sentence("If so, listen to your heart!", "Juliet")
     assert s.state.character_by_name("Romeo").value == 4257
+
+    s.run_sentence("Open your mind!", "Juliet")
 
     s.state.global_boolean = False
     s.run_sentence("If not, listen to your heart!", "Juliet")
